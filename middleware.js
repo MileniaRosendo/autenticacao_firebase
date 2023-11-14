@@ -1,4 +1,4 @@
-// authMiddleware.js
+
 const admin = require('firebase-admin');
 
 const authMiddleware = async (req, res, next) => {
