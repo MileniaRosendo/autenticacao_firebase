@@ -1,36 +1,41 @@
-const admin = require("firebase-admin");
-const serviceAccount = require("auth-firebase-70f47-firebase-adminsdk-mqz7l-75a9cf2dde.json");
-const express = require("express");
+
+const express = require('express');
+const auth = require('./auth');
+
 const app = express();
+app.use(express.json());
 
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: "auth-firebase-70f47.firebaseapp.com"
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  
+  try {
+    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+    const user = userCredential.user;
+    res.json({ message: 'Login bem-sucedido', user });
+  } catch (error) {
+    res.status(401).json({ message: 'Credenciais inválidas' });
+  }
 });
 
+app.post('/signup', async (req, res) => {
+  const { email, password } = req.body;
+  
+  try {
+    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+    const user = userCredential.user;
+    res.status(201).json({ message: 'Usuário criado com sucesso', user });
+  } catch (error) {
+    res.status(400).json({ message: 'Erro ao criar usuário', error: error.message });
+  }
+});
 
-const isAuthenticated = (req, res, next) => {
-    const idToken = req.header("Authorization");
-  
-    admin
-      .auth()
-      .verifyIdToken(idToken)
-      .then((decodedToken) => {
-        req.user = decodedToken;
-        next();
-      })
-      .catch((error) => {
-        res.status(401).json({ error: "Token de autenticação inválido" });
-      });
-  };
-  
-  // Rota protegida
-  app.get("/protegido", isAuthenticated, (req, res) => {
-    res.json({ message: "Esta rota é protegida!" });
+app.get('/logout', (req, res) => {
+  auth.signOut().then(() => {
+    res.json({ message: 'Logout bem-sucedido' });
   });
-  
-  app.listen(3000, () => {
-    console.log("Servidor Express rodando na porta 3000");
-  });
-  
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor executando na porta ${PORT}`);
+});
