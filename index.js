@@ -1,8 +1,9 @@
 const express = require('express');
 const auth = require('./auth');
-
 const app = express();
 app.use(express.json());
+
+
 
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
@@ -45,6 +46,24 @@ app.get('/logout', (req, res) => {
     .catch((err) => {
       console.log(err);
     });
+});
+
+app.get('/', async (req, res) => {
+  try {
+    // Obtém a lista de usuários no momento autenticados
+    const listUsersResult = await auth.listUsers();
+    const users = listUsersResult;
+
+    // Verifica se há usuários autenticados
+    if (users.length > 0) {
+      // Retorna o primeiro usuário autenticado
+      res.json({ message: 'Primeiro usuário logado', user: users[0] });
+    } else {
+      throw new Error('Nenhum usuário logado');
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Erro ao obter o primeiro usuário logado', error: error.message });
+  }
 });
 
 const PORT = process.env.PORT || 3000;

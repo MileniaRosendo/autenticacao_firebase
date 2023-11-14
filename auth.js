@@ -8,4 +8,18 @@ firebase.initializeApp({
 
 const auth = firebase.auth();
 
-module.exports = auth;
+async function listUsers() {
+  try {
+    const listUsersResult = await auth.listUsers();
+    const users = listUsersResult.users;
+    return users;
+  } catch (error) {
+    throw new Error(`Erro ao listar usuários: ${error.message}`);
+  }
+}
+
+module.exports = {
+  auth,
+  listUsers,
+};
+
